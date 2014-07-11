@@ -105,6 +105,18 @@ class Function:
             for l in xrange(2**initial_level):
                 self.refine(initial_level, l)
 
+    def print_tree(self,n=0,l=0):
+
+        if self.s[n].has_key(l):
+                s = ""
+                for i in range(n):
+                    s = s + "   "
+                print s,"[",n,",",l,"] Leaf Node with Coefficients "
+                print s, self.s[n][l]
+                print " "
+        else:
+            self.print_tree(n+1,2*l)
+            self.print_tree(n+1,2*l+1)
 
     def copy(self):
         '''
@@ -121,15 +133,22 @@ class Function:
                 result.d[n][l] = Vector(self.d[n][l])
         return result
 
-
-    def init_twoscale(self, k):
+    def init_twoscale(self,k):
         hg = twoscalecoeffs(k)
-        self.hg = Matrix(2 * k, 2 * k)
-        self.hgT = Matrix(2 * k, 2 * k)
-        for i in xrange(2 * k):
-            for j in xrange(2*k):
-                self.hg[i, j]  = hg[i][j]
-                self.hgT[i, j] = hg[j][i]
+        self.hg = Matrix(2*k,2*k)
+        self.hg0 = Matrix(2*k,k)
+        self.hg1 = Matrix(2*k,k)
+        self.hgT = Matrix(2*k,2*k)
+
+        for i in range(2*k):
+            for j in range(2*k):
+                self.hg[i,j]  = hg[i][j]
+                self.hgT[i,j] = hg[j][i]
+
+        for i in range(2*k):
+            for j in range(k):
+                self.hg0[i,j]  = hg[i][j]
+                self.hg1[i,j]  = hg[i][j+k]
 
 
     def init_quadrature(self, order):

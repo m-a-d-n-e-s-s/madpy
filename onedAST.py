@@ -2,11 +2,13 @@ import math
 from quadrature import gauss_legendre
 from twoscalecoeffs import twoscalecoeffs,phi
 from tensor import Vector, Matrix
-from oneDimensional import Function
+from oned import Function
+
 DEBUG=0
 DEBUG2=0
 DEBUGD=0
 DEBUGR=0
+
 ERROR_CODE = -1
 ADD_OPERATOR = 0
 MULTIPLY_OPERATOR = 1
@@ -88,8 +90,6 @@ class FunctionAST(Function):
         parent_coeff = coeff
 
         if not self.is_parent(n,l,nn,ll):
-            if DEBUG: 
-                print "Provided coefficient is not parent to the coefficients required"
             return -1
         else:
             computed_values = self.evaluate_at_box(self.k,parent_coeff,n,l,nn,ll,self.quad_x)
@@ -102,18 +102,12 @@ class FunctionAST(Function):
         parent_coeff = nd.coeff
         n = nd.level
         l = nd.translation
-        if DEBUG:
-            print "[",n,",",l,"] Parent Coeff", parent_coeff
 
         if not self.is_parent(n,l,nn,ll):
-            if DEBUG: 
-                print "Provided coefficient is not parent to the coefficients required"
             return -1
         else:
             computed_values = self.evaluate_at_box(self.k,parent_coeff,n,l,nn,ll,self.quad_x)
             computed_coeff = self.quad_values_to_coeff(computed_values,nn,ll,self.quad_phiw)
-            if DEBUG:
-                print "[",nn,",",ll,"] Computed Coeff", computed_coeff
             return computed_coeff
 
     def multiply_coefficients(self, coeff1, coeff2, n):
@@ -144,23 +138,13 @@ class FunctionAST(Function):
         le = len(evaluated_operands_list)
         lr = len(ready_operand_indices)
         
-        if le> lr:
-            if DEBUG: 
-                print "What did I do?, operand list(",le,") is greater than ready operand list(",lr,")"
-        #FIXME create a null vector
-
         result_coeff = self.get_coeff_from_parent(evaluated_operands_list[ready_operand_indices[0]],n,l)
-        if DEBUG:
-            print "[",n,",",l,"] Operand: ", result_coeff
 
         #iterating over operands whose coefficients are available
         for j in range (len(ready_operand_indices)-1):
             coeff = self.get_coeff_from_parent(evaluated_operands_list[ready_operand_indices[j+1]],n,l)
             
             result_coeff = self.add_coefficients(result_coeff,coeff)
-            if DEBUG:
-                print "Operand: ", coeff
-                print "Result Coeff as: ", result_coeff
 
         #sorts in reverse order so that operands can be popped off
         #of the evaluated_operands_list without messing up the
@@ -178,8 +162,7 @@ class FunctionAST(Function):
             
         #not implemeted yet
         result_node=self.create_node(result_coeff,n,l)
-        if DEBUG: 
-            print "Created Result of ADD Operation"
+
             #if all the operands are available for computing
             #then the operation is complete. Just replace the
             #operation node with the result node
@@ -339,15 +322,6 @@ class FunctionAST(Function):
             right = evaluated_operand.function.get_coeffs(n,l+1)
 
         if center and left and right:
-            if n == 30 and l == 536870912:
-                print "Left", left
-                print " "
-                print "Center", center
-                print " "
-                print "Right", right
-                print " "
-            if DEBUGD:
-                print "All Coefficients found"
             coeff = self.diff_coefficients(left,center,right,n)
 
             if n == self.max_level:
@@ -515,12 +489,9 @@ class FunctionAST(Function):
         if isinstance(new_AST, Node) and new_AST.has_coefficient:
             if DEBUG: 
                 print "Yay Computed result at [",n,",",l,"]"
-            if DEBUG2:
-                print "n is ", n, "l   is ",l
 
             self.s[n][l] = new_AST.coeff
-            if DEBUG: 
-                print " "            
+
         elif not isinstance(new_AST,Node):
             if DEBUG: 
                 print "Refining ..."
@@ -529,6 +500,7 @@ class FunctionAST(Function):
             if DEBUG2:
                 print "Refining at",n+1
                 print new_AST
+
             AST_copy = self.copy_AST(new_AST)
             
             self.traverse_tree(new_AST,n+1,2*l)
